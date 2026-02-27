@@ -1,0 +1,12 @@
+package com.dermafind.forum.controller;
+
+
+@Controller
+@Getter
+@Setter
+@URLMapping("api/post")
+public class PostController{
+    private final PostService postService; 
+
+
+}
