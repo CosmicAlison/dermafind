@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-class AppUser implements UserDetails, CredentialsContainer{
+public class AppUser implements UserDetails, CredentialsContainer{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
