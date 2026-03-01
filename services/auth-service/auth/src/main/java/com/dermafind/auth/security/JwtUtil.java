@@ -30,10 +30,13 @@ public class JwtUtil {
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
 
+    public long getRefreshExpiration() {
+        return refreshExpiration;
+    }
+
     public String extractUsername(String token){
         return extractClaim(token, Claims::getSubject);
     }
-
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
         return claimsResolver.apply(extractAllClaims(token));
     }

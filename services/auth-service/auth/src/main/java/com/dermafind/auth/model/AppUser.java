@@ -47,12 +47,12 @@ public class AppUser implements UserDetails, CredentialsContainer{
 
     @Override 
     public String getPassword(){
-        return "";
+        return this.password;
     }
 
     @Override 
     public String getUsername(){
-        return ""; 
+        return this.username; 
     }
 
     @Override
