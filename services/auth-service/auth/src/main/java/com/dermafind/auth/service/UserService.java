@@ -1,6 +1,7 @@
 package com.dermafind.auth.service;
 
 import com.dermafind.auth.dto.*;
+import com.dermafind.auth.exceptions.UserAlreadyExistsException;
 import com.dermafind.auth.model.AppUser;
 import com.dermafind.auth.model.RefreshToken;
 import com.dermafind.auth.repository.UserRepository;
@@ -12,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,24 +28,29 @@ public class UserService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.username())) {
-            throw new IllegalArgumentException("Username already taken");
+            throw new UserAlreadyExistsException("Username already taken");
         }
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already registered");
+            throw new UserAlreadyExistsException("Email already registered");
         }
 
-        AppUser user = new AppUser(
-            null,
-            request.username(),
-            passwordEncoder.encode(request.password()),
-            request.email()
-        );
+        AppUser user = new AppUser();
+        user.setEmail(request.email());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setProfileUrl(request.profileUrl());
+        user.setUsername(request.username());
+
         userRepository.save(user);
 
-        String accessToken = jwtUtil.generateToken(user);
+        Map<String, Object> extraClaims = Map.of(
+            "userId", user.getId(),
+            "email", user.getEmail()
+        );
+
+        String accessToken = jwtUtil.generateToken(extraClaims, user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return new AuthResponse(accessToken, refreshToken.getToken());
+        return new AuthResponse(user, accessToken, refreshToken.getToken());
     }
 
     @Transactional
@@ -54,11 +61,16 @@ public class UserService {
 
         AppUser user = userRepository.findByUsername(request.username())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        
+        Map<String, Object> extraClaims = Map.of(
+            "userId", user.getId(),
+            "email", user.getEmail()
+        );
 
-        String accessToken = jwtUtil.generateToken(user);
+        String accessToken = jwtUtil.generateToken(extraClaims, user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return new AuthResponse(accessToken, refreshToken.getToken());
+        return new AuthResponse(user, accessToken, refreshToken.getToken());
     }
 
     @Transactional

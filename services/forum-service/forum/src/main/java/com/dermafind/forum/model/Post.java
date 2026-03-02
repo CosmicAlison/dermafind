@@ -1,6 +1,10 @@
 package com.dermafind.forum.model;
 
+import java.time.Instant;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -38,4 +42,10 @@ public class Post {
 
     @OneToMany(mappedBy = "post")
     private List<Like> likes;
+
+    @CreationTimestamp
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    private Instant updatedAt; 
 }
