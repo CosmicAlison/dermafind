@@ -24,7 +24,7 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id; 
 
-    private String author;
+    private Long authorId;
 
     private String content; 
 }

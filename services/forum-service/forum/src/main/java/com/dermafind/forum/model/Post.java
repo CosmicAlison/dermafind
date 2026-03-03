@@ -33,7 +33,7 @@ public class Post {
     private String title;
     private String content;
 
-    private String author;
+    private Long authorId;
 
     @OneToMany(mappedBy = "post")
     private List<Comment> comments;

@@ -12,5 +12,5 @@ public class Like {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String author;
+    private Long authorId;
 }

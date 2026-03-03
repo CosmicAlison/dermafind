@@ -1,10 +1,16 @@
 package com.dermafind.forum.service;
 
+import java.util.Optional;
+
+import javax.naming.NameNotFoundException;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import com.dermafind.forum.repository.PostRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,15 +29,29 @@ public class PostService {
         return postRepository.findAll(pageable);
     }
 
-    public Page<Post> findAllUserPosts(String username, Pageable pageable){
-        return postRepository.findByUsername(username, pageable);
+    public Page<Post> findAllUserPosts(Long userId, Pageable pageable){
+        return postRepository.findByAuthorId(userId, pageable);
     }
 
-    public Post createPost(String username,  NewPostRequest newPost){
+    public Post createPost(Long userId,  NewPostRequest newPost){
         Post post = new Post();
         post.setContent(newPost.content());
         post.setTitle(newPost.title());
-        post.setAuthor(username);
+        post.setAuthorId(userId); 
         return postRepository.save(post);
+    }
+
+    public void deletePost(Long userId, Long postId){
+        Optional<Post> post = postRepository.findById(postId);
+        if (!post.isPresent()){
+            throw new EntityNotFoundException("Post not found.");
+        }
+
+        Post foundPost = post.get();
+        if (!foundPost.getAuthorId().equals(userId)){
+            throw new AuthorizationDeniedException("Attempted to delete a post you do not own");
+        };
+
+        postRepository.delete(foundPost);
     }
 }

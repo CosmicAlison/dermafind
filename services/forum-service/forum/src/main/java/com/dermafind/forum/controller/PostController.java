@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import com.dermafind.forum.dto.NewPostRequest;
 import com.dermafind.forum.model.Post;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,15 +42,21 @@ public class PostController{
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<Page<Post>> getUserPosts(@PathVariable String username,
+    public ResponseEntity<Page<Post>> getUserPosts(@PathVariable Long userId,
         @PageableDefault (size=10, sort = "createdAt", direction = Sort.Direction.DESC)
         Pageable pageable
     ){
-        return ResponseEntity.ok(postService.findAllUserPosts(username, pageable));
+        return ResponseEntity.ok(postService.findAllUserPosts(userId, pageable));
     }
 
     @PostMapping("/")
-    public Post savePost(@RequestHeader("X-Username") String username, @RequestBody NewPostRequest newPost){
-        return postService.createPost(username, newPost);
+    public ResponseEntity<Post> savePost(@RequestHeader("X-User-Id") Long userId, @RequestBody NewPostRequest newPost){
+        return ResponseEntity.ok(postService.createPost(userId, newPost));
+    }
+
+    @DeleteMapping("/{post_id}")
+    public ResponseEntity<?> deletePost(@PathVariable Long postId, @RequestHeader("X-User-Id") Long userId){
+        postService.deletePost(userId, postId);
+        return ResponseEntity.noContent().build();
     }
 }
