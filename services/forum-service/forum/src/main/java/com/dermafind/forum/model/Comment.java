@@ -27,4 +27,8 @@ public class Comment {
     private Long authorId;
 
     private String content; 
+
+    @ManyToOne
+    @JoinColumn(name = "post_id")
+    private Post post;
 }
