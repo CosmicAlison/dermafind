@@ -20,7 +20,7 @@ public class RefreshTokenService {
     @Transactional
     public RefreshToken createRefreshToken(AppUser user) {
         // Revoke all existing tokens for this user before issuing a new one
-        refreshTokenRepository.revokeAllUserTokens(user);
+        refreshTokenRepository.revokeAllUserTokens(user.getId());
 
         String tokenValue = jwtUtil.generateRefreshToken(user);
 
@@ -51,7 +51,7 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public void revokeAllUserTokens(AppUser user) {
-        refreshTokenRepository.revokeAllUserTokens(user);
+    public void revokeAllUserTokens(Long userId) {
+        refreshTokenRepository.revokeAllUserTokens(userId);
     }
 }

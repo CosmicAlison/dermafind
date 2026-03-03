@@ -18,7 +18,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,7 +38,7 @@ public class AppUser implements UserDetails, CredentialsContainer{
     @Column(unique = true, nullable = false)
     private String username;
 
-    @NotNull
+    @Column(nullable = false)
     private String password; 
 
     @Email

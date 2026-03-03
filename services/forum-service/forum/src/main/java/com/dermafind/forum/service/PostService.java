@@ -2,11 +2,9 @@ package com.dermafind.forum.service;
 
 import java.util.Optional;
 
-import javax.naming.NameNotFoundException;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authorization.AuthorizationDeniedException;
+
 import org.springframework.stereotype.Service;
 import com.dermafind.forum.repository.PostRepository;
 
@@ -49,7 +47,7 @@ public class PostService {
 
         Post foundPost = post.get();
         if (!foundPost.getAuthorId().equals(userId)){
-            throw new AuthorizationDeniedException("Attempted to delete a post you do not own");
+            throw new IllegalArgumentException("Attempted to delete a post you do not own");
         };
 
         postRepository.delete(foundPost);

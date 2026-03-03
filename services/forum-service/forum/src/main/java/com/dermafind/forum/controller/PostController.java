@@ -32,7 +32,7 @@ import lombok.Setter;
 public class PostController{
     private final PostService postService; 
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<Page<Post>> getAllPosts(
         @PageableDefault(size=10, sort = "createdAt", direction = Sort.Direction.DESC)
         Pageable pageable
@@ -41,7 +41,7 @@ public class PostController{
         return ResponseEntity.ok(posts);
     }
 
-    @GetMapping("/{username}")
+    @GetMapping("/{userId}")
     public ResponseEntity<Page<Post>> getUserPosts(@PathVariable Long userId,
         @PageableDefault (size=10, sort = "createdAt", direction = Sort.Direction.DESC)
         Pageable pageable
@@ -49,7 +49,7 @@ public class PostController{
         return ResponseEntity.ok(postService.findAllUserPosts(userId, pageable));
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<Post> savePost(@RequestHeader("X-User-Id") Long userId, @RequestBody NewPostRequest newPost){
         return ResponseEntity.ok(postService.createPost(userId, newPost));
     }

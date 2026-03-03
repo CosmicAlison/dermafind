@@ -5,7 +5,7 @@ import com.dermafind.auth.dto.AuthRequest;
 import com.dermafind.auth.dto.AuthResponse;
 import com.dermafind.auth.dto.RefreshRequest;
 import com.dermafind.auth.dto.RegisterRequest;
-import com.dermafind.auth.dto.SafeUser;
+
 import com.dermafind.auth.model.AppUser;
 import com.dermafind.auth.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

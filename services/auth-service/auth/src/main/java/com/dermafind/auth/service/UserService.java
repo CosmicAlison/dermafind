@@ -104,6 +104,6 @@ public class UserService {
 
     @Transactional
     public void logout(AppUser user) {
-        refreshTokenService.revokeAllUserTokens(user);
+        refreshTokenService.revokeAllUserTokens(user.getId());
     }
 }
