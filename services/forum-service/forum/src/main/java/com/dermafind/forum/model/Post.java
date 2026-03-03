@@ -33,9 +33,7 @@ public class Post {
     private String title;
     private String content;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private ForumUser author;
+    private String author;
 
     @OneToMany(mappedBy = "post")
     private List<Comment> comments;

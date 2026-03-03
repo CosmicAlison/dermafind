@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import com.dermafind.forum.dto.NewPostRequest;
 import com.dermafind.forum.model.Post;
 
 @Service
@@ -22,7 +23,15 @@ public class PostService {
         return postRepository.findAll(pageable);
     }
 
-    public Page<Post> findAllUserPosts(Pageable pageable){
-        return postRepository.findByUsername(null, pageable);
+    public Page<Post> findAllUserPosts(String username, Pageable pageable){
+        return postRepository.findByUsername(username, pageable);
+    }
+
+    public Post createPost(String username,  NewPostRequest newPost){
+        Post post = new Post();
+        post.setContent(newPost.content());
+        post.setTitle(newPost.title());
+        post.setAuthor(username);
+        return postRepository.save(post);
     }
 }

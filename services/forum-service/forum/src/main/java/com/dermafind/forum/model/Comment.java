@@ -24,9 +24,7 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id; 
 
-    @ManyToOne
-    @JoinColumn(name="user_id")
-    private ForumUser author;
+    private String author;
 
     private String content; 
 }

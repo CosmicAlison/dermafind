@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,18 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
+
+    public SafeUser getMe(String username){
+        Optional<AppUser> user = userRepository.findByUsername(username);
+
+        if (!user.isPresent()){
+            throw new UsernameNotFoundException("The user could not be found");
+        }
+
+        AppUser foundUser = user.get();
+        SafeUser safeUser = new SafeUser(foundUser.getId(), foundUser.getUsername(), foundUser.getEmail(), foundUser.getProfileUrl());
+        return safeUser; 
+    }
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -46,11 +59,12 @@ public class UserService {
             "userId", user.getId(),
             "email", user.getEmail()
         );
+        SafeUser safeUser = new SafeUser(user.getId(), user.getUsername(), user.getEmail(), user.getProfileUrl());
 
         String accessToken = jwtUtil.generateToken(extraClaims, user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return new AuthResponse(user, accessToken, refreshToken.getToken());
+        return new AuthResponse(safeUser, accessToken, refreshToken.getToken());
     }
 
     @Transactional
@@ -66,11 +80,12 @@ public class UserService {
             "userId", user.getId(),
             "email", user.getEmail()
         );
+        SafeUser safeUser = new SafeUser(user.getId(), user.getUsername(), user.getEmail(), user.getProfileUrl());
 
         String accessToken = jwtUtil.generateToken(extraClaims, user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return new AuthResponse(user, accessToken, refreshToken.getToken());
+        return new AuthResponse(safeUser, accessToken, refreshToken.getToken());
     }
 
     @Transactional
@@ -78,12 +93,13 @@ public class UserService {
         // Validate token exists in DB, not revoked, not expired
         RefreshToken existing = refreshTokenService.validateRefreshToken(request.refreshToken());
         AppUser user = existing.getUser();
+        SafeUser safeUser = new SafeUser(user.getId(), user.getUsername(), user.getEmail(), user.getProfileUrl());
 
         // Issue new access + refresh token (old one gets revoked inside createRefreshToken)
         String newAccessToken = jwtUtil.generateToken(user);
         RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user);
 
-        return new AuthResponse(newAccessToken, newRefreshToken.getToken());
+        return new AuthResponse(safeUser, newAccessToken, newRefreshToken.getToken());
     }
 
     @Transactional

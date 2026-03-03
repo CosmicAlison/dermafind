@@ -1,0 +1,16 @@
+spring.application.name=auth
+server.port=8080
+
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+spring.jpa.hibernate.ddl-auto=${SPRING_JPA_HIBERNATE_DDL_AUTO}
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+
+jwt.secret=988fa61e8b98d46045ca625e513ad9cc5cbedc07e0885e8ec5e06f3b04b5dfef
+jwt.expiration=3600000
+jwt.refresh-expiration=86400000

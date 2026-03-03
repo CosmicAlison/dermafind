@@ -49,7 +49,7 @@ public class JwtUtil {
             .getBody();
     }
 
-        public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
 
@@ -88,5 +88,4 @@ public class JwtUtil {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
 }
