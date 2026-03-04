@@ -41,7 +41,7 @@ public class PostController{
         return ResponseEntity.ok(posts);
     }
 
-    @GetMapping("/{userId}")
+    @GetMapping("/user/{userId}")
     public ResponseEntity<Page<Post>> getUserPosts(@PathVariable Long userId,
         @PageableDefault (size=10, sort = "createdAt", direction = Sort.Direction.DESC)
         Pageable pageable
@@ -54,7 +54,7 @@ public class PostController{
         return ResponseEntity.ok(postService.createPost(userId, newPost));
     }
 
-    @DeleteMapping("/{post_id}")
+    @DeleteMapping("/{postId}")
     public ResponseEntity<?> deletePost(@PathVariable Long postId, @RequestHeader("X-User-Id") Long userId){
         postService.deletePost(userId, postId);
         return ResponseEntity.noContent().build();
