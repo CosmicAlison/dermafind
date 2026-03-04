@@ -6,6 +6,8 @@ import com.dermafind.auth.model.AppUser;
 import com.dermafind.auth.model.RefreshToken;
 import com.dermafind.auth.repository.UserRepository;
 import com.dermafind.auth.security.JwtUtil;
+
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +27,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
+    private final EntityManager entityManager; 
 
     public SafeUser getMe(String username){
         Optional<AppUser> user = userRepository.findByUsername(username);
@@ -73,14 +76,19 @@ public class UserService {
             new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );
 
+        entityManager.clear();
+
         AppUser user = userRepository.findByUsername(request.username())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        
+
         Map<String, Object> extraClaims = Map.of(
             "userId", user.getId(),
             "email", user.getEmail()
         );
-        SafeUser safeUser = new SafeUser(user.getId(), user.getUsername(), user.getEmail(), user.getProfileUrl());
+        SafeUser safeUser = new SafeUser(
+            user.getId(), user.getUsername(),
+            user.getEmail(), user.getProfileUrl()
+        );
 
         String accessToken = jwtUtil.generateToken(extraClaims, user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
