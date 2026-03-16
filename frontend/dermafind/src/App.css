@@ -40,3 +40,8 @@
 .read-the-docs {
   color: #888;
 }
+
+* {
+    font-variant-ligatures: normal;
+    font-variant: normal;
+}

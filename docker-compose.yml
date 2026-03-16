@@ -51,7 +51,7 @@ services:
   frontend:
     build: ./frontend/dermafind
     ports:
-      - "3000:3000"
+      - "3000:80"
 
 volumes:
   pgdata:

@@ -13,7 +13,7 @@ import type {
   LoginCredentials,
   SignupCredentials,
   User,
-} from '../types';
+} from '../index';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://api.dermafind.app';
@@ -60,7 +60,7 @@ function userFromToken(token: string): User | null {
   };
 }
 
-// ─── API calls ────────────────────────────────────────────────────────────────
+
 async function apiLogin(credentials: LoginCredentials): Promise<AuthTokens> {
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
@@ -76,7 +76,7 @@ async function apiLogin(credentials: LoginCredentials): Promise<AuthTokens> {
 }
 
 async function apiSignup(credentials: SignupCredentials): Promise<AuthTokens> {
-  const res = await fetch(`${API_BASE}/auth/signup`, {
+  const res = await fetch(`${API_BASE}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),

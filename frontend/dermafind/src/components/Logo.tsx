@@ -6,7 +6,7 @@ interface LogoProps {
 }
 
 const fontSizes = { sm: '20px', md: '26px', lg: '42px' };
-const iconSizes  = { sm: 20,    md: 26,    lg: 46     };
+const iconSizes  = { sm: 24,    md: 30,    lg: 50     };
 
 export function Logo({ size = 'md', showIcon = true }: LogoProps) {
   return (
@@ -15,7 +15,7 @@ export function Logo({ size = 'md', showIcon = true }: LogoProps) {
       <span
         className="grad-text"
         style={{
-          fontFamily: 'var(--font-display)',
+          fontFamily: 'Michelle',
           fontSize: fontSizes[size],
           fontWeight: 600,
           letterSpacing: '-0.5px',

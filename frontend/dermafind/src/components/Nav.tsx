@@ -1,6 +1,6 @@
 import { Logo } from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
-import type { AppPage } from '../types';
+import type { AppPage } from '../index';
 
 interface NavProps {
   page: AppPage;
@@ -11,7 +11,7 @@ export function Nav({ page, setPage }: NavProps) {
   const { user, logout } = useAuth();
 
   const initials = user?.name
-    ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
     : 'U';
 
   return (

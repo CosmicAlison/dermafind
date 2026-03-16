@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import type { ScanResult } from '../types';
+import type { ScanResult } from '../index';
 
 interface ScanResultViewProps {
   result: ScanResult;

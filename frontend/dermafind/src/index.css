@@ -1,7 +1,28 @@
 @import "tailwindcss";
 
+body {
+    font-family: 'Michelle', sans-serif;
+    font-feature-settings: "liga" 1, "kern" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+}
+
+
+@font-face {
+  font-family: 'Michelle';
+  src: url('./fonts/Michelle2.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'MichelleOutline';
+  src: url('./fonts/MichelleOutline.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif, Michelle;
   line-height: 1.5;
   font-weight: 400;
 
@@ -30,6 +51,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "kern" 1, "calt" 1, "aalt" 1, "salt" 1;
 }
 
 h1 {
