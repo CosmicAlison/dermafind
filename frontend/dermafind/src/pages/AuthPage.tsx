@@ -33,14 +33,13 @@ export function AuthPage() {
   return (
     <div style={{
       minHeight: '100vh',
+      minWidth:'100vw',
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
     }}>
       {/* ── Visual panel ── */}
-      <div style={{
+      <div className="md:flex md:flex-col hidden" style={{
         background: 'var(--grad)',
-        display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 24,
@@ -81,7 +80,7 @@ export function AuthPage() {
       </div>
 
       {/* ── Form panel ── */}
-      <div style={{
+      <div className="w-100" style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -167,4 +166,5 @@ export function AuthPage() {
       </div>
     </div>
   );
+
 }

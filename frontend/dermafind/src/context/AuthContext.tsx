@@ -13,7 +13,7 @@ import type {
   LoginCredentials,
   SignupCredentials,
   User,
-} from '../index';
+} from '../types';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://api.dermafind.app';

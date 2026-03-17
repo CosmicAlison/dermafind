@@ -4,7 +4,7 @@ import { ScanLoadingView } from '../components/ScanLoadingView';
 import { ScanResultView }  from '../components/ScanResultView';
 import { ScanErrorView }   from '../components/ScanErrorView';
 import { useAuth }         from '../context/AuthContext';
-import type { ScanPhase, ScanResult } from '../index';
+import type { ScanPhase, ScanResult } from '../types';
 
 // Mock result — replace with real API response shape
 const MOCK_RESULT: ScanResult = {
@@ -70,7 +70,7 @@ export function ScanPage() {
       flexDirection: 'column',
       alignItems: 'center',
       padding: '28px 24px',
-      maxWidth: 480,
+      minWidth: '100vw',
       margin: '0 auto',
       width: '100%',
     }}>

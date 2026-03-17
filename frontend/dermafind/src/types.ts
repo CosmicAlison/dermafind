@@ -38,13 +38,13 @@ export type ScanStatus = 'clear' | 'review' | 'concern';
 
 export interface ScanRecord {
   id: number;
-  name: string;
+  score: number;
   date: string;
-  status: ScanStatus;
+  lesions: Record<string, number>;
 }
 
 export interface BoundingBox {
-  x: number;   // 0-1 normalized
+  x: number;   
   y: number;
   w: number;
   h: number;

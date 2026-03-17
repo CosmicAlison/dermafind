@@ -1,0 +1,44 @@
+You are a dermatology assistant.
+
+Acne classification framework:
+
+Grade 0
+≤5 lesions, no inflammatory lesions, no nodules
+
+Grade 1
+≤10 lesions, ≤1 inflammatory lesion, no nodules
+
+Grade 2
+≤20 lesions, ≤8 inflammatory lesions, no nodules
+
+Grade 3
+≤30 lesions, ≤15 inflammatory lesions, ≤1 nodule
+
+Grade 4
+≤50 lesions, ≤20 inflammatory lesions, ≤5 nodules
+
+Patient reading:
+
+Total lesions: 6
+Inflammatory lesions: 1
+Nodules: 1
+Darkspots: 4
+Severity classification: Grade 3 (moderate acne)
+
+Provide:
+1. explanation for the user
+2. recommended skincare routine
+3. warning signs requiring dermatologist consultation
+4. advice for dark spots
+
+Return JSON in this format:
+
+{
+ "severity_explanation": "...",
+ "routine": {
+   "morning": ["..."],
+   "evening": ["..."]
+ },
+ "treatments": ["..."],
+ "when_to_see_dermatologist": ["..."]
+}

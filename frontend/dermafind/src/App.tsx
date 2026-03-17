@@ -6,7 +6,8 @@ import { ScanPage }       from './pages/ScanPage';
 import { Nav }            from './components/Nav';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import './styles/globals.css';
-import type { AppPage } from './index';
+
+import type { AppPage } from './types';
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -17,7 +18,7 @@ export default function App() {
   if (!isAuthenticated) return <AuthPage />;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{minWidth: '100vw', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Nav page={page} setPage={setPage} />
       {page === 'dashboard'
         ? <DashboardPage setPage={setPage} />

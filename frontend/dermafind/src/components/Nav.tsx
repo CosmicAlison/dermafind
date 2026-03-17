@@ -1,6 +1,6 @@
 import { Logo } from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
-import type { AppPage } from '../index';
+import type { AppPage } from '../types';
 
 interface NavProps {
   page: AppPage;
