@@ -20,7 +20,7 @@ const MOCK_RESULT: ScanResult = {
 };
 
 export function ScanPage() {
-  const { refreshAccessToken } = useAuth();
+  const { getAccessToken } = useAuth();
   const [phase, setPhase]       = useState<ScanPhase>('camera');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [result, setResult]     = useState<ScanResult | null>(null);
@@ -55,7 +55,7 @@ export function ScanPage() {
 
     setResult(MOCK_RESULT);
     setPhase('result');
-  }, [refreshAccessToken]);
+  }, [getAccessToken]);
 
   function reset() {
     setPhase('camera');
@@ -70,10 +70,8 @@ export function ScanPage() {
       flexDirection: 'column',
       alignItems: 'center',
       padding: '28px 24px',
-      minWidth: '100vw',
       margin: '0 auto',
-      width: '100%',
-    }}>
+    }} className='md:max-w-[680px] w-100vw'>
       {phase === 'camera' && (
         <>
           <h2 style={{

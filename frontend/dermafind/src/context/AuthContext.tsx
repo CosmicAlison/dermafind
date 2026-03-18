@@ -5,26 +5,22 @@ import React, {
   useEffect,
   useCallback,
   useRef,
-} from 'react';
+} from "react";
 import type {
   AuthContextValue,
   AuthState,
-  AuthResponse, 
+  AuthResponse,
   LoginCredentials,
   SignupCredentials,
   User,
-} from '../types';
+} from "../types";
 
-// ─── Config ───────────────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://api.dermafind.app';
-
-// Refresh 2 minutes before expiry (tokens assumed 15-min lifetime)
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "https://api.dermafind.app";
 const REFRESH_THRESHOLD_MS = 2 * 60 * 1000;
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseJwtPayload(token: string): Record<string, unknown> | null {
   try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
     return JSON.parse(atob(base64));
   } catch {
     return null;
@@ -33,81 +29,61 @@ function parseJwtPayload(token: string): Record<string, unknown> | null {
 
 function tokenExpiresAt(token: string): number | null {
   const payload = parseJwtPayload(token);
-  if (!payload || typeof payload.exp !== 'number') return null;
-  return payload.exp * 1000; // convert to ms
+  if (!payload || typeof payload.exp !== "number") return null;
+  return payload.exp * 1000;
 }
 
-function isTokenExpired(token: string): boolean {
+function isTokenNearExpiry(token: string) {
   const exp = tokenExpiresAt(token);
-  if (exp === null) return true;
-  return Date.now() >= exp;
-}
-
-function isTokenNearExpiry(token: string): boolean {
-  const exp = tokenExpiresAt(token);
-  if (exp === null) return true;
+  if (!exp) return true;
   return Date.now() >= exp - REFRESH_THRESHOLD_MS;
 }
 
-function userFromToken(token: string): User | null {
-  const payload = parseJwtPayload(token);
-  if (!payload) return null;
-  return {
-    id: String(payload.sub ?? ''),
-    username: String(payload.username ?? ''),
-    email: String(payload.email ?? ''),
-  };
-}
-
-
 async function apiLogin(credentials: LoginCredentials): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(credentials),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message ?? 'Login failed');
-  }
-  const data = await res.json() as { user: User, accessToken: string };
-  return { user: data.user, accessToken: data.accessToken };
+
+  if (!res.ok) throw new Error("Login failed");
+
+  return res.json();
 }
 
 async function apiSignup(credentials: SignupCredentials): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(credentials),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message ?? 'Signup failed');
-  }
-  const data = await res.json() as { user: User, accessToken: string };
-  return { user: data.user, accessToken: data.accessToken};
+
+  if (!res.ok) throw new Error("Signup failed");
+
+  return res.json();
 }
 
-async function apiRefreshToken(): Promise<string> {
+async function apiRefreshToken(): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE}/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
   });
-  if (!res.ok) throw new Error('Token refresh failed');
-  const data = await res.json() as { user: User, accessToken: string };
-  return data.accessToken;
+
+  if (!res.ok) throw new Error("Refresh failed");
+
+  return res.json();
 }
 
-async function apiLogout(): Promise<void> {
+async function apiLogout() {
   await fetch(`${API_BASE}/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
+    method: "POST",
+    credentials: "include",
   });
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -118,90 +94,94 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false,
   });
 
-  // Ref so refresh timer always sees latest tokens without re-registering
   const accessTokenRef = useRef<string | null>(null);
-  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshPromiseRef = useRef<Promise<AuthResponse> | null>(null);
 
+  const scheduleRefresh = useCallback((token: string) => {
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
 
-  function applyAccessToken(accessToken: string) {
-    const user = userFromToken(accessToken);
+    const exp = tokenExpiresAt(token);
+    if (!exp) return;
+
+    const delay = Math.max(exp - Date.now() - REFRESH_THRESHOLD_MS, 1000);
+
+    refreshTimerRef.current = setTimeout(() => {
+      refreshToken();
+    }, delay);
+  }, []);
+
+  const applyAuth = useCallback((accessToken: string, user: User) => {
     accessTokenRef.current = accessToken;
+
     setState({
       user,
       accessToken,
       isLoading: false,
       isAuthenticated: true,
     });
+
     scheduleRefresh(accessToken);
-  }
+  }, [scheduleRefresh]);
 
-  // ── Schedule silent refresh before expiry ───────────────────────────────────
-  function scheduleRefresh(accessToken: string) {
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    const exp = tokenExpiresAt(accessToken);
-    if (!exp) return;
-    const delay = Math.max(exp - Date.now() - REFRESH_THRESHOLD_MS, 0);
-    refreshTimerRef.current = setTimeout(silentRefresh, delay);
-  }
-
-  const silentRefresh = useCallback(async () => {
-    try {
-      const newAccessToken = await apiRefreshToken();
-      applyAccessToken(newAccessToken);
-    } catch {
-      logout();
+  const refreshToken = useCallback(async (): Promise<AuthResponse> => {
+    if (!refreshPromiseRef.current) {
+      refreshPromiseRef.current = apiRefreshToken()
+        .then((res) => {
+          applyAuth(res.accessToken, res.user);
+          return res;
+        })
+        .finally(() => {
+          refreshPromiseRef.current = null;
+        });
     }
-  }, []);
+
+    return refreshPromiseRef.current;
+  }, [applyAuth]);
 
   useEffect(() => {
-    apiRefreshToken()
-      .then(applyAccessToken)
+    refreshToken()
       .catch(() => {
-        setState(s => ({ ...s, isLoading: false }));
+        setState((s) => ({ ...s, isLoading: false }));
       });
-  }, []);
+  }, [refreshToken]);
 
-  useEffect(() => {
-    return () => { if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current); };
-  }, []);
-
-  // ── Public API ───────────────────────────────────────────────────────────────
   const login = useCallback(async (credentials: LoginCredentials) => {
-    const tokens = await apiLogin(credentials);
-    applyAccessToken(tokens.accessToken);
-  }, []);
+    const res = await apiLogin(credentials);
+    applyAuth(res.accessToken, res.user);
+  }, [applyAuth]);
 
   const signup = useCallback(async (credentials: SignupCredentials) => {
-    const tokens = await apiSignup(credentials);
-    applyAccessToken(tokens.accessToken);
-  }, []);
+    const res = await apiSignup(credentials);
+    applyAuth(res.accessToken, res.user);
+  }, [applyAuth]);
 
   const logout = useCallback(async () => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+
     accessTokenRef.current = null;
+
     await apiLogout();
-    setState({ user: null, accessToken: null, isLoading: false, isAuthenticated: false });
+
+    setState({
+      user: null,
+      accessToken: null,
+      isLoading: false,
+      isAuthenticated: false,
+    });
   }, []);
 
-  /**
-   * Call this in API requests that need a valid access token.
-   * Returns a fresh token, transparently refreshing if near expiry.
-   */
   const getAccessToken = useCallback(async (): Promise<string | null> => {
     const token = accessTokenRef.current;
     if (!token) return null;
+
     if (isTokenNearExpiry(token)) {
-      try {
-        const newToken = await apiRefreshToken();
-        applyAccessToken(newToken);
-        return newToken;
-      } catch {
-        logout();
-        return null;
-      }
+      const res = await refreshToken();
+      return res.accessToken;
     }
+
     return token;
-  }, [logout]);
+  }, [refreshToken]);
 
   return (
     <AuthContext.Provider value={{ ...state, login, signup, logout, getAccessToken }}>
@@ -210,9 +190,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 }
