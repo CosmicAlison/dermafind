@@ -24,13 +24,13 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://api.dermafind.app
  *   const data = await api<MyScanResult>('/scans', { method: 'POST', body: formData });
  */
 export function useApi() {
-  const { refreshAccessToken, logout } = useAuth();
+  const { getAccessToken, logout } = useAuth();
 
   const request = useCallback(async <T = unknown>(
     path: string,
     options: RequestOptions = {},
   ): Promise<T> => {
-    const token = await refreshAccessToken();
+    const token = await getAccessToken();
 
     if (!token) {
       logout();
@@ -65,7 +65,7 @@ export function useApi() {
     if (res.status === 204) return undefined as T;
 
     return res.json() as Promise<T>;
-  }, [refreshAccessToken, logout]);
+  }, [getAccessToken, logout]);
 
   return request;
 }

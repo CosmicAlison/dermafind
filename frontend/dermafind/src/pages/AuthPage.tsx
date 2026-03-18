@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 export function AuthPage() {
   const { login, signup } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [name, setName]       = useState('');
+  const [username, setUsername]       = useState('');
   const [email, setEmail]     = useState('');
   const [password, setPassword] = useState('');
   const [error, setError]     = useState('');
@@ -18,10 +18,11 @@ export function AuthPage() {
     setLoading(true);
     try {
       if (mode === 'login') {
-        await login({ email, password });
+        await login({ username, password });
       } else {
-        if (!name.trim()) { setError('Please enter your name.'); setLoading(false); return; }
-        await signup({ name, email, password });
+        if (!username.trim()) { setError('Please enter your username.'); setLoading(false); return; }
+        if (!username.match('^[a-zA-Z0-9_]{5,20}$')){ setError('White spaces and special characters not allowed in username.'); setLoading(false); return}
+        await signup({ username, email, password });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
@@ -102,19 +103,20 @@ export function AuthPage() {
           </div>
 
           <form onSubmit={handleSubmit}>
-            {mode === 'signup' && (
-              <div className="field">
-                <label>Full name</label>
+            <div className="field">
+                <label>Username</label>
                 <input
                   type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Jane Doe"
-                  autoComplete="name"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  placeholder="Jane_Doe"
+                  autoComplete="username"
                   required
                 />
-              </div>
-            )}
+            </div>            
+            
+            {mode === 'signup' && (
+
             <div className="field">
               <label>Email</label>
               <input
@@ -126,6 +128,8 @@ export function AuthPage() {
                 required
               />
             </div>
+            )}     
+
             <div className="field">
               <label>Password</label>
               <input

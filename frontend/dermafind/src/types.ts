@@ -1,28 +1,29 @@
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
+  profileUrl?: string;
 }
 
-export interface AuthTokens {
+export interface AuthResponse {
+  user: User, 
   accessToken: string;
-  refreshToken: string;
 }
 
 export interface AuthState {
   user: User | null;
-  tokens: AuthTokens | null;
+  accessToken: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
 
 export interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface SignupCredentials {
-  name: string;
+  username: string;
   email: string;
   password: string;
 }
@@ -31,7 +32,7 @@ export interface AuthContextValue extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
   signup: (credentials: SignupCredentials) => Promise<void>;
   logout: () => void;
-  refreshAccessToken: () => Promise<string | null>;
+  getAccessToken: () => Promise<string | null>;
 }
 
 export type ScanStatus = 'clear' | 'review' | 'concern';

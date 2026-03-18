@@ -97,9 +97,9 @@ public class UserService {
     }
 
     @Transactional
-    public AuthResponse refresh(RefreshRequest request) {
+    public AuthResponse refresh(String refreshToken) {
         // Validate token exists in DB, not revoked, not expired
-        RefreshToken existing = refreshTokenService.validateRefreshToken(request.refreshToken());
+        RefreshToken existing = refreshTokenService.validateRefreshToken(refreshToken);
         AppUser user = existing.getUser();
         SafeUser safeUser = new SafeUser(user.getId(), user.getUsername(), user.getEmail(), user.getProfileUrl());
 

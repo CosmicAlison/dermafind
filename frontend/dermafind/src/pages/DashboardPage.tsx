@@ -52,7 +52,7 @@ interface DashboardPageProps {
 
 export function DashboardPage({ setPage }: DashboardPageProps) {
   const { user } = useAuth();
-  const firstName = user?.name?.split(' ')[0] ?? 'there';
+  const firstName = user?.username?.split(' ')[0] ?? 'there';
   const [scans, setScans] = useState<ScanRecord[] | null>()
   const [recommendation, setRecommendation] = useState<string>();
 
