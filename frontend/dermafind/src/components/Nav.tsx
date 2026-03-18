@@ -54,7 +54,7 @@ export function Nav({ page, setPage }: NavProps) {
       </div>
 
       <button
-        onClick={logout}
+        //onClick={logout}
         title={`Signed in as ${user?.email ?? ''} — click to sign out`}
         style={{
           width: 34,

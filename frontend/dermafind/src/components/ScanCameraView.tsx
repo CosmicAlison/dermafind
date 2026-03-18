@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useRef, useCallback, useState } from 'react';
+import Webcam from 'react-webcam';
 
 interface ScanCameraViewProps {
   onCapture: () => void;
@@ -7,6 +8,7 @@ interface ScanCameraViewProps {
 
 export function ScanCameraView({ onCapture, onUpload }: ScanCameraViewProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const webcamRef = useRef(null);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -24,6 +26,7 @@ export function ScanCameraView({ onCapture, onUpload }: ScanCameraViewProps) {
         background: '#060610',
         position: 'relative',
       }}>
+        <Webcam audio={false} ref={webcamRef} screenshotFormat='image/jpeg'/>
         {/* Placeholder bg */}
         <div style={{
           width: '100%', height: '100%',
@@ -35,7 +38,7 @@ export function ScanCameraView({ onCapture, onUpload }: ScanCameraViewProps) {
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
             <circle cx="12" cy="13" r="4" />
           </svg>
-          Position area in frame
+          Position face in frame
         </div>
 
         {/* Corner guides overlay */}
@@ -45,7 +48,7 @@ export function ScanCameraView({ onCapture, onUpload }: ScanCameraViewProps) {
       </div>
 
       <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', marginTop: 14 }}>
-        Center the skin area within the guide frame
+        Center the face within the guide frame
       </p>
 
       {/* Controls */}
