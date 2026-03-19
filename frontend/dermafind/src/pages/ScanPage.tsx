@@ -5,6 +5,7 @@ import { ScanResultView }  from '../components/ScanResultView';
 import { ScanErrorView }   from '../components/ScanErrorView';
 import { useAuth }         from '../context/AuthContext';
 import type { ScanPhase, ScanResult } from '../types';
+import { useApi } from '../useApi';
 
 const SEVERITY_LABELS: Record<number, string> = {
   0: 'Clear',
@@ -16,6 +17,7 @@ const SEVERITY_LABELS: Record<number, string> = {
 
 export function ScanPage() {
   const { getAccessToken } = useAuth();
+  const request = useApi();
   const [phase, setPhase]       = useState<ScanPhase>('camera');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [result, setResult]     = useState<ScanResult | null>(null);
@@ -36,16 +38,8 @@ export function ScanPage() {
 
       const formData = new FormData();
       formData.append('image', fileRef.current);
-
-      const res = await fetch('/api/inference/scan/detect', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (!res.ok) { setPhase('error'); return; }
-
-      const data: ScanResult = await res.json();
+      
+      const data = await request<ScanResult>('/inference/scan/detect', {method:'POST', body: formData}); 
       setResult(data);
       setPhase('result');
     } catch {

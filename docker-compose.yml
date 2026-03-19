@@ -54,6 +54,7 @@ services:
     depends_on:
       - auth-service
       - forum-service
+      - inference-service
 
   frontend:
     build: ./frontend/dermafind
