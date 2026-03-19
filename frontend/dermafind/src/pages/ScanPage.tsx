@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { ScanCameraView }  from '../components/ScanCameraView';
 import { ScanLoadingView } from '../components/ScanLoadingView';
 import { ScanResultView }  from '../components/ScanResultView';
@@ -6,17 +6,12 @@ import { ScanErrorView }   from '../components/ScanErrorView';
 import { useAuth }         from '../context/AuthContext';
 import type { ScanPhase, ScanResult } from '../types';
 
-// Mock result — replace with real API response shape
-const MOCK_RESULT: ScanResult = {
-  success: true,
-  diagnosis: 'Seborrheic Keratosis',
-  confidence: 87,
-  description:
-    'A benign skin growth that often appears as a brown, black or light tan growth. Typically harmless and requires no treatment.',
-  tags: ['Benign', 'Non-melanoma', 'Low priority', 'Monitor annually'],
-  boxes: [
-    { x: 0.28, y: 0.22, w: 0.44, h: 0.38, label: 'Seborrheic Keratosis', conf: 0.87 },
-  ],
+const SEVERITY_LABELS: Record<number, string> = {
+  0: 'Clear',
+  1: 'Mild',
+  2: 'Moderate',
+  3: 'Severe',
+  4: 'Very Severe',
 };
 
 export function ScanPage() {
@@ -24,43 +19,45 @@ export function ScanPage() {
   const [phase, setPhase]       = useState<ScanPhase>('camera');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [result, setResult]     = useState<ScanResult | null>(null);
+  const fileRef = useRef<File | null>(null);
 
-  // Called when user taps the shutter (demo — no real camera API)
-  function handleCapture() {
-    setImageUrl(null); // no file, use placeholder
-    setPhase('loading');
-  }
-
-  // Called when user uploads a file
   function handleUpload(file: File) {
-    const url = URL.createObjectURL(file);
-    setImageUrl(url);
+    fileRef.current = file;
+    setImageUrl(URL.createObjectURL(file));
     setPhase('loading');
   }
 
-  // Called by ScanLoadingView when its timer finishes
-  // In production: receive the actual API result here instead of the boolean
   const handleLoadComplete = useCallback(async (success: boolean) => {
-    if (!success) { setPhase('error'); return; }
+    if (!success || !fileRef.current) { setPhase('error'); return; }
 
-    // Example: call your real API
-    // const token = await refreshAccessToken();
-    // const res   = await fetch('/api/scan', {
-    //   method: 'POST',
-    //   headers: { Authorization: `Bearer ${token}` },
-    //   body: formData,
-    // });
-    // const data: ScanResult = await res.json();
-    // setResult(data);
+    try {
+      const token = await getAccessToken();
+      if (!token) { setPhase('error'); return; }
 
-    setResult(MOCK_RESULT);
-    setPhase('result');
+      const formData = new FormData();
+      formData.append('image', fileRef.current);
+
+      const res = await fetch('/api/inference/scan/detect', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) { setPhase('error'); return; }
+
+      const data: ScanResult = await res.json();
+      setResult(data);
+      setPhase('result');
+    } catch {
+      setPhase('error');
+    }
   }, [getAccessToken]);
 
   function reset() {
     setPhase('camera');
     setImageUrl(null);
     setResult(null);
+    fileRef.current = null;
   }
 
   return (
@@ -80,7 +77,7 @@ export function ScanPage() {
           }}>
             New Scan
           </h2>
-          <ScanCameraView onCapture={handleCapture} onUpload={handleUpload} />
+          <ScanCameraView onUpload={handleUpload} />
         </>
       )}
 
@@ -96,7 +93,12 @@ export function ScanPage() {
           }}>
             Scan result
           </h2>
-          <ScanResultView result={result} imageUrl={imageUrl} onNewScan={reset} />
+          <ScanResultView
+            result={result}
+            imageUrl={imageUrl}
+            onNewScan={reset}
+            severityLabel={SEVERITY_LABELS[result.result] ?? 'Unknown'}
+          />
         </>
       )}
 

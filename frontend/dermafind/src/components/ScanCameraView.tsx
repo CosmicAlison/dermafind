@@ -1,19 +1,29 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback } from 'react';
 import Webcam from 'react-webcam';
 
 interface ScanCameraViewProps {
-  onCapture: () => void;
   onUpload: (file: File) => void;
 }
 
-export function ScanCameraView({ onCapture, onUpload }: ScanCameraViewProps) {
+export function ScanCameraView({ onUpload }: ScanCameraViewProps) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const webcamRef = useRef(null);
+  const webcamRef = useRef<Webcam>(null);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) onUpload(file);
   }
+
+  const handleCapture = useCallback(() => {
+    const screenshot = webcamRef.current?.getScreenshot();
+    if (!screenshot) return;
+    fetch(screenshot)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
+        onUpload(file);
+      });
+  }, [onUpload]);
 
   return (
     <>
@@ -26,33 +36,55 @@ export function ScanCameraView({ onCapture, onUpload }: ScanCameraViewProps) {
         background: '#060610',
         position: 'relative',
       }}>
-        <Webcam audio={false} ref={webcamRef} screenshotFormat='image/jpeg'/>
-        {/* Placeholder bg */}
-        <div style={{
-          width: '100%', height: '100%',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          gap: 10, color: 'rgba(255,255,255,0.25)', fontSize: 13,
-        }}>
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-            <circle cx="12" cy="13" r="4" />
-          </svg>
-          Position face in frame
-        </div>
+        <Webcam
+          audio={false}
+          ref={webcamRef}
+          screenshotFormat="image/jpeg"
+          videoConstraints={{ facingMode: 'user' }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
 
         {/* Corner guides overlay */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
           <CornerFrame />
+        </div>
+
+        {/* Label */}
+        <div style={{
+          position: 'absolute', bottom: 16, left: 0, right: 0,
+          display: 'flex', justifyContent: 'center',
+        }}>
+          <span style={{
+            fontSize: 12, color: 'rgba(255,255,255,0.6)',
+            background: 'rgba(0,0,0,0.4)',
+            padding: '4px 12px', borderRadius: 999,
+            backdropFilter: 'blur(4px)',
+          }}>
+            Position face in frame
+          </span>
         </div>
       </div>
 
       <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', marginTop: 14 }}>
-        Center the face within the guide frame
+        For best results ensure your face is well lit and in frame
       </p>
 
       {/* Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, marginTop: 24, width: '100%' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'center', gap: 32,
+        marginTop: 24, width: '100%',
+      }}>
+        {/* Upload button */}
         <button
           onClick={() => fileRef.current?.click()}
           className="btn-secondary"
@@ -61,14 +93,14 @@ export function ScanCameraView({ onCapture, onUpload }: ScanCameraViewProps) {
           Upload
         </button>
 
-        {/* Capture ring + button */}
+        {/* Capture button */}
         <div style={{
           width: 80, height: 80, borderRadius: '50%',
           border: '2px solid rgba(255,255,255,0.18)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <button
-            onClick={onCapture}
+            onClick={handleCapture}
             style={{
               width: 64, height: 64, borderRadius: '50%',
               background: 'var(--grad)',
@@ -89,7 +121,7 @@ export function ScanCameraView({ onCapture, onUpload }: ScanCameraViewProps) {
           </button>
         </div>
 
-        {/* Spacer to balance layout */}
+        {/* Spacer */}
         <div style={{ width: 68 }} />
       </div>
 
@@ -113,11 +145,15 @@ function CornerFrame() {
     borderStyle: 'solid',
   };
   return (
-    <div style={{ width: '60%', aspectRatio: '1', position: 'relative', borderRadius: 8, border: '1.5px solid rgba(255,255,255,0.2)' }}>
-      <div style={{ ...corner, top: -2,    left: -2,   borderWidth: '3px 0 0 3px', borderRadius: '5px 0 0 0'  }} />
-      <div style={{ ...corner, top: -2,    right: -2,  borderWidth: '3px 3px 0 0', borderRadius: '0 5px 0 0'  }} />
-      <div style={{ ...corner, bottom: -2, left: -2,   borderWidth: '0 0 3px 3px', borderRadius: '0 0 0 5px'  }} />
-      <div style={{ ...corner, bottom: -2, right: -2,  borderWidth: '0 3px 3px 0', borderRadius: '0 0 5px 0'  }} />
+    <div style={{
+      width: '60%', aspectRatio: '1',
+      position: 'relative', borderRadius: 8,
+      border: '1.5px solid rgba(255,255,255,0.2)',
+    }}>
+      <div style={{ ...corner, top: -2,    left: -2,   borderWidth: '3px 0 0 3px', borderRadius: '5px 0 0 0' }} />
+      <div style={{ ...corner, top: -2,    right: -2,  borderWidth: '3px 3px 0 0', borderRadius: '0 5px 0 0' }} />
+      <div style={{ ...corner, bottom: -2, left: -2,   borderWidth: '0 0 3px 3px', borderRadius: '0 0 0 5px' }} />
+      <div style={{ ...corner, bottom: -2, right: -2,  borderWidth: '0 3px 3px 0', borderRadius: '0 0 5px 0' }} />
     </div>
   );
 }

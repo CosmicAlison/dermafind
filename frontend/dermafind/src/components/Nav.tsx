@@ -8,7 +8,7 @@ interface NavProps {
 }
 
 export function Nav({ page, setPage }: NavProps) {
-  const { user, logout } = useAuth();
+  const { user} = useAuth();
 
   const initials = user?.username
     ? user.username.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()

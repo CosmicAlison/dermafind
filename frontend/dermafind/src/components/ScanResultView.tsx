@@ -2,12 +2,30 @@ import { useEffect, useRef, useCallback } from 'react';
 import type { ScanResult } from '../types';
 
 interface ScanResultViewProps {
-  result: ScanResult;
-  imageUrl: string | null;
-  onNewScan: () => void;
+  result:        ScanResult;
+  imageUrl:      string | null;
+  severityLabel: string;
+  onNewScan:     () => void;
 }
 
-export function ScanResultView({ result, imageUrl, onNewScan }: ScanResultViewProps) {
+const SEVERITY_COLOURS: Record<number, { bg: string; text: string }> = {
+  0: { bg: 'rgba(52,199,89,0.12)',   text: '#34C759' },
+  1: { bg: 'rgba(52,199,89,0.12)',   text: '#34C759' },
+  2: { bg: 'rgba(255,159,10,0.12)',  text: '#FF9F0A' },
+  3: { bg: 'rgba(255,69,58,0.12)',   text: '#FF453A' },
+  4: { bg: 'rgba(255,69,58,0.12)',   text: '#FF453A' },
+};
+
+const LESION_LABELS: Array<{ key: keyof ScanResult; label: string }> = [
+  { key: 'blackheads', label: 'Blackheads' },
+  { key: 'darkspots',  label: 'Dark Spots'  },
+  { key: 'papules',    label: 'Papules'     },
+  { key: 'pustules',   label: 'Pustules'    },
+  { key: 'whiteheads', label: 'Whiteheads'  },
+  { key: 'nodules',    label: 'Nodules'     },
+];
+
+export function ScanResultView({ result, imageUrl, severityLabel, onNewScan }: ScanResultViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef    = useRef<HTMLImageElement>(null);
 
@@ -26,21 +44,18 @@ export function ScanResultView({ result, imageUrl, onNewScan }: ScanResultViewPr
       const w = box.w * width;
       const h = box.h * height;
 
-      // Fill
       ctx.fillStyle = 'rgba(91,79,196,0.12)';
       ctx.fillRect(x, y, w, h);
 
-      // Dashed stroke
       ctx.strokeStyle = 'rgba(155,107,181,0.85)';
       ctx.lineWidth = 2;
       ctx.setLineDash([6, 3]);
       ctx.strokeRect(x, y, w, h);
       ctx.setLineDash([]);
 
-      // Label pill
       const label = `${box.label}  ${Math.round(box.conf * 100)}%`;
       ctx.font = '600 12px DM Sans, sans-serif';
-      const tw = ctx.measureText(label).width;
+      const tw    = ctx.measureText(label).width;
       const pillH = 22;
       const pillW = tw + 14;
 
@@ -53,7 +68,6 @@ export function ScanResultView({ result, imageUrl, onNewScan }: ScanResultViewPr
     });
   }, [result.boxes]);
 
-  // Sync canvas dimensions to its rendered size, then draw
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -66,6 +80,9 @@ export function ScanResultView({ result, imageUrl, onNewScan }: ScanResultViewPr
     return () => observer.disconnect();
   }, [drawBoxes]);
 
+  const colour = SEVERITY_COLOURS[result.result] ?? SEVERITY_COLOURS[0];
+  const totalLesions = LESION_LABELS.reduce((sum, { key }) => sum + (result[key] as number), 0);
+
   return (
     <div className="fade-in" style={{ width: '100%' }}>
       {/* Image + bounding boxes */}
@@ -74,7 +91,7 @@ export function ScanResultView({ result, imageUrl, onNewScan }: ScanResultViewPr
         borderRadius: 'var(--r)', overflow: 'hidden',
         position: 'relative', background: '#060610',
       }}>
-        {imageUrl ? (
+        {imageUrl && (
           <img
             ref={imgRef}
             src={imageUrl}
@@ -85,9 +102,6 @@ export function ScanResultView({ result, imageUrl, onNewScan }: ScanResultViewPr
             }}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
-        ) : (
-          /* Demo placeholder */
-          <DemoPlaceholder />
         )}
         <canvas
           ref={canvasRef}
@@ -103,42 +117,47 @@ export function ScanResultView({ result, imageUrl, onNewScan }: ScanResultViewPr
         padding: '20px 22px',
         marginTop: 16,
       }}>
+        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 600 }}>
-            {result.diagnosis}
+            {severityLabel} Acne
           </h3>
           <div style={{
-            background: 'rgba(52,199,89,0.12)',
-            color: '#34C759',
-            fontSize: 12,
-            padding: '5px 12px',
-            borderRadius: 20,
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
+            background: colour.bg, color: colour.text,
+            fontSize: 12, padding: '5px 12px',
+            borderRadius: 20, fontWeight: 500,
+            whiteSpace: 'nowrap', flexShrink: 0,
           }}>
-            {result.confidence}% match
+            Grade {result.result}
           </div>
         </div>
 
-        <p style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.65, marginTop: 8 }}>
-          {result.description}
-        </p>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
-          {result.tags?.map((tag, i) => (
-            <div key={i} style={{
-              fontSize: 12,
-              padding: '5px 12px',
-              borderRadius: 20,
-              border: `1px solid ${i < 2 ? 'rgba(91,79,196,0.4)' : 'var(--border)'}`,
-              background: i < 2 ? 'rgba(91,79,196,0.15)' : 'transparent',
-              color: i < 2 ? '#A48FE8' : 'var(--muted)',
-            }}>
-              {tag}
-            </div>
-          ))}
+        {/* Lesion breakdown */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 10, marginTop: 16,
+        }}>
+          {LESION_LABELS.map(({ key, label }) => {
+            const count = result[key] as number;
+            return (
+              <div key={key} style={{
+                background: 'var(--dark)',
+                border: '1px solid var(--border)',
+                borderRadius: 10,
+                padding: '10px 12px',
+                opacity: count === 0 ? 0.4 : 1,
+              }}>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>{count}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{label}</div>
+              </div>
+            );
+          })}
         </div>
+
+        {/* Total */}
+        <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 14 }}>
+          {totalLesions} total lesions detected · {result.boxes?.length ?? 0} annotated
+        </p>
       </div>
 
       {/* Actions */}
@@ -147,7 +166,7 @@ export function ScanResultView({ result, imageUrl, onNewScan }: ScanResultViewPr
           New Scan
         </button>
         <button className="btn-primary" style={{ flex: 1 }}>
-          Save to History
+          Get Recommendation
         </button>
       </div>
     </div>
@@ -167,36 +186,4 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
-}
-
-function DemoPlaceholder() {
-  // Visual stand-in when no image file is available (demo capture)
-  const box = { x: 0.28, y: 0.22, w: 0.44, h: 0.38, label: 'Seborrheic Keratosis', conf: 0.87 };
-  return (
-    <div style={{
-      width: '100%', height: '100%',
-      background: 'linear-gradient(135deg,#12102a 0%,#1e1535 50%,#130f1c 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      position: 'relative',
-    }}>
-      {/* Simulated bounding box */}
-      <div style={{
-        position: 'absolute',
-        left: `${box.x * 100}%`, top: `${box.y * 100}%`,
-        width: `${box.w * 100}%`, height: `${box.h * 100}%`,
-        border: '2px dashed rgba(155,107,181,0.8)',
-        background: 'rgba(91,79,196,0.1)',
-        borderRadius: 4,
-      }}>
-        <div style={{
-          position: 'absolute', top: -24, left: 0,
-          background: 'rgba(91,79,196,0.92)',
-          color: '#fff', fontSize: 11, fontWeight: 600,
-          padding: '3px 8px', borderRadius: 4, whiteSpace: 'nowrap',
-        }}>
-          {box.label}  {Math.round(box.conf * 100)}%
-        </div>
-      </div>
-    </div>
-  );
 }

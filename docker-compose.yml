@@ -35,10 +35,17 @@ services:
     depends_on:
       - postgres
 
-  #skin-service:
-  #  build: ./services/skin-service
-  #  ports:
-  #    - "8083:8083"
+  inference-service:
+    build: ./services/inference-service
+    ports:
+      - "8083:8083"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/inferencedb
+      ROBOFLOW_API_KEY: ${ROBOFLOW_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      FLASK_ENV: production
+    depends_on:
+      - postgres
 
   gateway:
     build: ./gateway

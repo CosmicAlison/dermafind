@@ -44,22 +44,27 @@ export interface ScanRecord {
   lesions: Record<string, number>;
 }
 
-export interface BoundingBox {
-  x: number;   
-  y: number;
-  w: number;
-  h: number;
+export interface ScanBox {
+  x: number;     
+  y: number;     
+  w: number;     
+  h: number;     
   label: string;
   conf: number;
 }
 
 export interface ScanResult {
-  success: boolean;
-  diagnosis?: string;
-  confidence?: number;
-  description?: string;
-  tags?: string[];
-  boxes?: BoundingBox[];
+  id:          number;
+  user_id:     string;
+  result:      number;   
+  date:        string;
+  blackheads:  number;
+  darkspots:   number;
+  papules:     number;
+  pustules:    number;
+  whiteheads:  number;
+  nodules:     number;
+  boxes:       ScanBox[];
 }
 
 export type ScanPhase = 'camera' | 'loading' | 'result' | 'error';
