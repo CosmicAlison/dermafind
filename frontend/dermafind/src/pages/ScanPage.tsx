@@ -33,9 +33,6 @@ export function ScanPage() {
     if (!success || !fileRef.current) { setPhase('error'); return; }
 
     try {
-      const token = await getAccessToken();
-      if (!token) { setPhase('error'); return; }
-
       const formData = new FormData();
       formData.append('image', fileRef.current);
       

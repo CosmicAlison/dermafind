@@ -17,12 +17,12 @@ const SEVERITY_COLOURS: Record<number, { bg: string; text: string }> = {
 };
 
 const LESION_LABELS: Array<{ key: keyof ScanResult; label: string }> = [
-  { key: 'blackheads', label: 'Blackheads' },
-  { key: 'darkspots',  label: 'Dark Spots'  },
-  { key: 'papules',    label: 'Papules'     },
-  { key: 'pustules',   label: 'Pustules'    },
-  { key: 'whiteheads', label: 'Whiteheads'  },
-  { key: 'nodules',    label: 'Nodules'     },
+  { key: 'blackhead', label: 'Blackhead' },
+  { key: 'darkspot',  label: 'Dark Spot'  },
+  { key: 'papule',    label: 'Papule'     },
+  { key: 'pustule',   label: 'Pustule'    },
+  { key: 'whitehead', label: 'Whitehead'  },
+  { key: 'nodule',    label: 'Nodule'     },
 ];
 
 export function ScanResultView({ result, imageUrl, severityLabel, onNewScan }: ScanResultViewProps) {

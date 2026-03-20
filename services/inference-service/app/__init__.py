@@ -2,7 +2,7 @@ from flask import Flask
 from .extensions import db, migrate
 from config import config
 import os
-
+from .models import Scan, Recommendation  
 
 def create_app(config_name=None):
     if config_name is None:

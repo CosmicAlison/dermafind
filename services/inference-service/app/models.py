@@ -6,19 +6,17 @@ class Scan(db.Model):
     __tablename__ = 'scans'
 
     id             = db.Column(db.Integer,   primary_key=True)
-    user_id        = db.Column(db.String,    nullable=False, index=True)  # from X-User-Id header
+    user_id        = db.Column(db.String,    nullable=False, index=True) 
     result         = db.Column(db.Integer,   nullable=False)              # severity grade 0-4
     date           = db.Column(db.DateTime,  nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # lesion counts
-    blackheads     = db.Column(db.Integer,   nullable=False, default=0)
-    darkspots      = db.Column(db.Integer,   nullable=False, default=0)
-    papules        = db.Column(db.Integer,   nullable=False, default=0)
-    pustules       = db.Column(db.Integer,   nullable=False, default=0)
-    whiteheads     = db.Column(db.Integer,   nullable=False, default=0)
-    nodules        = db.Column(db.Integer,   nullable=False, default=0)
-
-    recommendation  = db.relationship('Recommendation', back_populates='scan', uselist=False)
+    blackhead     = db.Column(db.Integer,   nullable=False, default=0)
+    darkspot      = db.Column(db.Integer,   nullable=False, default=0)
+    papule        = db.Column(db.Integer,   nullable=False, default=0)
+    pustule       = db.Column(db.Integer,   nullable=False, default=0)
+    whitehead     = db.Column(db.Integer,   nullable=False, default=0)
+    nodule        = db.Column(db.Integer,   nullable=False, default=0)
 
     def to_dict(self):
         return {
@@ -26,13 +24,12 @@ class Scan(db.Model):
             'user_id':        self.user_id,
             'result':         self.result,
             'date':           self.date.isoformat(),
-            'blackheads':     self.blackheads,
-            'darkspots':      self.darkspots,
-            'papules':        self.papules,
-            'pustules':       self.pustules,
-            'whiteheads':     self.whiteheads,
-            'nodules':        self.nodules,
-            'annotated_image': self.annotated_image,
+            'blackhead':     self.blackhead,
+            'darkspot':      self.darkspot,
+            'papule':        self.papule,
+            'pustule':       self.pustule,
+            'whitehead':     self.whitehead,
+            'nodule':        self.nodule,
         }
 
 

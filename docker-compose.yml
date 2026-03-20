@@ -2,6 +2,11 @@
 services:
   postgres:
     image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -43,9 +48,11 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/inferencedb
       ROBOFLOW_API_KEY: ${ROBOFLOW_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      FLASK_ENV: production
+      FLASK_ENV: development
+      PYTHONBUFFERED: 1
     depends_on:
-      - postgres
+      postgres: 
+        condition: service_healthy
 
   gateway:
     build: ./gateway

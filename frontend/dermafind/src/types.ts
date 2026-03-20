@@ -58,12 +58,12 @@ export interface ScanResult {
   user_id:     string;
   result:      number;   
   date:        string;
-  blackheads:  number;
-  darkspots:   number;
-  papules:     number;
-  pustules:    number;
-  whiteheads:  number;
-  nodules:     number;
+  blackhead:  number;
+  darkspot:   number;
+  papule:     number;
+  pustule:    number;
+  whitehead:  number;
+  nodule:     number;
   boxes:       ScanBox[];
 }
 

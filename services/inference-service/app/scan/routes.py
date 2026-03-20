@@ -27,13 +27,15 @@ def detect():
     try:
         scan = run_detection(image_bytes, user_id, api_key)
 
+        img_w = getattr(scan, '_image_meta', {}).get('width', 1)
+        img_h = getattr(scan, '_image_meta', {}).get('height', 1)
         # normalize Roboflow predictions into the box format your frontend expects
         boxes = [
             {
-                'x':     pred['x'] / pred['image_width']  if 'image_width'  in pred else pred['x'],
-                'y':     pred['y'] / pred['image_height'] if 'image_height' in pred else pred['y'],
-                'w':     pred['width']  / pred.get('image_width',  1),
-                'h':     pred['height'] / pred.get('image_height', 1),
+                'x':     pred['x'] / img_w,
+                'y':     pred['y'] / img_h,
+                'w':     pred['width']  / img_w,
+                'h':     pred['height'] / img_h,
                 'label': pred['class'],
                 'conf':  pred['confidence'],
             }
@@ -46,14 +48,18 @@ def detect():
         current_app.logger.error(f'Detection error: {e}')
         return jsonify({'error': 'Detection failed'}), 500
     
-@scan_bp.get('/<int:scan_id>')
-def get_scan(scan_id: int):
+@scan_bp.get('/')
+def get_scan():
     user_id = get_user_id()
     if not user_id:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    scan = Scan.query.filter_by(id=scan_id, user_id=user_id).first()
-    if not scan:
-        return jsonify({'error': 'Scan not found'}), 404
+    scans = (
+        Scan.query
+        .filter_by(user_id=user_id)
+        .order_by(Scan.date.desc())
+        .limit(5)
+        .all()
+    )
 
-    return jsonify(scan.to_dict()), 200
+    return jsonify([s.to_dict() for s in scans]), 200

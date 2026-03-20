@@ -2,8 +2,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
+
 RUN apt-get update && apt-get install -y \
-    fonts-dejavu-core \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -13,4 +16,7 @@ COPY . .
 
 EXPOSE 8083
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8083", "--workers", "2", "run:app"]
+CMD ["sh", "entrypoint.sh"]
+
+
+

@@ -12,6 +12,7 @@ import {
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 import { useAuth } from '../context/AuthContext'
+import { useApi } from '../useApi'
 
 ChartJS.register(
   CategoryScale,
@@ -55,10 +56,12 @@ export function DashboardPage({ setPage }: DashboardPageProps) {
   const firstName = user?.username?.split(' ')[0] ?? 'there';
   const [scans, setScans] = useState<ScanRecord[] | null>()
   const [recommendation, setRecommendation] = useState<string>();
+  const request = useApi();
 
   useEffect(()=>{
     setRecommendation("Your skin shows a few mild blemishes, one small nodule, and some dark spots. Use a gentle cleanser, apply a retinoid at night, benzoyl peroxide in the morning, and keep your skin moisturized. Protect with sunscreen daily, treat any inflamed spots directly, and avoid picking. Niacinamide or azelaic acid can help fade dark spots over time.");
-    setScans(MOCK_SCANS);
+    request<ScanRecord[]>('/inference/scan')
+    .then((scans)=>{setScans(scans)});
   }, []); 
 
   const chartData = {
@@ -266,7 +269,7 @@ export function DashboardPage({ setPage }: DashboardPageProps) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {MOCK_SCANS.slice(0, 3).map(scan => (
+        {scans?.slice(0, 3).map(scan => (
           <div
             key={scan.id}
             style={{

@@ -1,66 +1,42 @@
-import anthropic
-from datetime import datetime, timezone, timedelta
-
-from ..models import Recommendation
-from ..extensions import db
+from flask import request, jsonify, current_app
+from . import recommendation_bp
+from .service import generate_recommendation, get_last_recommendation
 
 
-def load_prompt() -> str:
-    prompt_path = os.path.join(os.path.dirname(__file__), '..', '..', 'prompt.txt')
-    with open(prompt_path, 'r') as f:
-        return f.read()
+def get_user_id():
+    return request.headers.get('X-User-Id')
 
 
-def get_last_recommendation(user_id: str) -> Recommendation | None:
-    return (
-        Recommendation.query
-        .filter_by(user_id=user_id)
-        .order_by(Recommendation.created_at.desc())
-        .first()
-    )
+@recommendation_bp.get('/')
+def get_recommendation():
+    user_id = get_user_id()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    rec = get_last_recommendation(user_id)
+    if not rec:
+        return jsonify({'error': 'No recommendation found'}), 404
+
+    return jsonify(rec.to_dict()), 200
 
 
-def is_within_one_week(rec: Recommendation) -> bool:
-    now      = datetime.now(timezone.utc)
-    rec_time = rec.created_at.replace(tzinfo=timezone.utc) if rec.created_at.tzinfo is None else rec.created_at
-    return (now - rec_time) < timedelta(weeks=1)
+@recommendation_bp.post('/')
+def create_recommendation():
+    user_id = get_user_id()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
 
+    scan_data = request.get_json()
+    if not scan_data:
+        return jsonify({'error': 'Scan data required'}), 400
 
-def build_scan_summary(scan_data: dict) -> str:
-    grade_labels = {0: 'Clear', 1: 'Mild', 2: 'Moderate', 3: 'Severe', 4: 'Very Severe'}
-    grade = scan_data.get('result', 0)
-    return (
-        f"Severity grade: {grade} ({grade_labels.get(grade, 'Unknown')})\n"
-        f"Blackheads: {scan_data.get('blackheads', 0)}\n"
-        f"Dark spots: {scan_data.get('darkspots', 0)}\n"
-        f"Papules: {scan_data.get('papules', 0)}\n"
-        f"Pustules: {scan_data.get('pustules', 0)}\n"
-        f"Whiteheads: {scan_data.get('whiteheads', 0)}\n"
-        f"Nodules: {scan_data.get('nodules', 0)}\n"
-    )
+    api_key = current_app.config['ANTHROPIC_API_KEY']
+    if not api_key:
+        return jsonify({'error': 'Anthropic API key not configured'}), 500
 
-
-def generate_recommendation(scan_data: dict, user_id: str, api_key: str) -> Recommendation:
-    last = get_last_recommendation(user_id)
-    if last and is_within_one_week(last):
-        return last
-
-    prompt_template = load_prompt()
-    scan_summary    = build_scan_summary(scan_data)
-    full_prompt     = prompt_template.replace('{{SCAN_RESULTS}}', scan_summary)
-
-    client  = anthropic.Anthropic(api_key=api_key)
-    message = client.messages.create(
-        model      = 'claude-sonnet-4-6',
-        max_tokens = 1024,
-        messages   = [{'role': 'user', 'content': full_prompt}],
-    )
-    content = message.content[0].text
-
-    rec = Recommendation(
-        user_id = user_id,
-        content = content,
-    )
-    db.session.add(rec)
-    db.session.commit()
-    return rec
+    try:
+        rec = generate_recommendation(scan_data, user_id, api_key)
+        return jsonify(rec.to_dict()), 200
+    except Exception as e:
+        current_app.logger.error(f'Recommendation error: {e}')
+        return jsonify({'error': 'Recommendation failed'}), 500
