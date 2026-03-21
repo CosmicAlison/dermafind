@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 from ..models import Recommendation, Scan
 from ..extensions import db
 import requests
+from flask import current_app
 
 
 def load_prompt() -> str:
@@ -31,24 +32,26 @@ def build_scan_summary(scan: Scan) -> str:
     grade_labels = {0: 'Clear', 1: 'Mild', 2: 'Moderate', 3: 'Severe', 4: 'Very Severe'}
     return (
         f"Severity grade: {scan.result} ({grade_labels.get(scan.result, 'Unknown')})\n"
-        f"Blackheads: {scan.blackheads}\n"
-        f"Dark spots: {scan.darkspots}\n"
-        f"Papules: {scan.papules}\n"
-        f"Pustules: {scan.pustules}\n"
-        f"Whiteheads: {scan.whiteheads}\n"
-        f"Nodules: {scan.nodules}\n"
+        f"Blackheads: {scan.blackhead}\n"
+        f"Dark spots: {scan.darkspot}\n"
+        f"Papules: {scan.papule}\n"
+        f"Pustules: {scan.pustule}\n"
+        f"Whiteheads: {scan.whitehead}\n"
+        f"Nodules: {scan.nodule}\n"
     )
 
 
-def generate_recommendation(scan: Scan, user_id: str, api_key: str) -> Recommendation:
+def generate_recommendation(scan: Scan, user_id: str) -> Recommendation:
     # Rate limit — return last recommendation if within one week
     last = get_last_recommendation(user_id)
     if last and is_within_one_week(last):
         return last
 
+    api_key = current_app.config['OPENROUTER_API_KEY']
     prompt_template = load_prompt()
     scan_summary    = build_scan_summary(scan)
     full_prompt     = prompt_template.replace('{{SCAN_RESULTS}}', scan_summary)
+
     res = requests.post(
             'https://openrouter.ai/api/v1/chat/completions',
             headers={
@@ -56,17 +59,17 @@ def generate_recommendation(scan: Scan, user_id: str, api_key: str) -> Recommend
                 'Content-Type': 'application/json',
             },
             json={
-                'model': 'meta-llama/llama-3.1-8b-instruct:free',
+                'model': 'openrouter/free',
                 'messages': [{'role': 'user', 'content': full_prompt}],
             },
             timeout=30,
         )
+    print(res.text)
     res.raise_for_status()
-    content =  res.json()['choices'][0]['message']['content']
+    content =  res.json()['choices'][0]['message']['content']['recommendation']
 
     rec = Recommendation(
         user_id = user_id,
-        scan_id = scan.id,
         content = content,
     )
     db.session.add(rec)

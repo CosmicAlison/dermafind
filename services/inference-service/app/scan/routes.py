@@ -62,4 +62,7 @@ def get_scan():
         .all()
     )
 
+    if not scans:
+        return jsonify({'error': 'No scans found'}), 404
+
     return jsonify([s.to_dict() for s in scans]), 200

@@ -1,8 +1,15 @@
 export interface User {
-  id: string;
+  id: Number;
   username: string;
   email: string;
   profileUrl?: string;
+}
+
+export interface Recommendation{
+    id :  Number       
+    user_id: Number   
+    content : string   
+    created_at : Date
 }
 
 export interface AuthResponse {
@@ -36,13 +43,6 @@ export interface AuthContextValue extends AuthState {
 }
 
 export type ScanStatus = 'clear' | 'review' | 'concern';
-
-export interface ScanRecord {
-  id: number;
-  score: number;
-  date: string;
-  lesions: Record<string, number>;
-}
 
 export interface ScanBox {
   x: number;     

@@ -5,8 +5,10 @@ import requests
 from inference_sdk import InferenceHTTPClient
 from inference_sdk import InferenceConfiguration
 
+from flask import current_app
 from ..models import Scan
 from ..extensions import db
+from ..tasks import generate_recommendation_task
 
 # ── Severity table (ported from Node.js) ─────────────────────────────────────
 SEVERITY = [
@@ -69,7 +71,6 @@ def call_roboflow(image_bytes: bytes, api_key: str):
 def run_detection(image_bytes: bytes, user_id: str, api_key: str) -> Scan:
     predictions, image_meta = call_roboflow(image_bytes, api_key)
 
-
     lesion_counts = {k: 0 for k in set(CLASS_MAPPING.values())}
     for pred in predictions:
         mapped = CLASS_MAPPING.get(pred['class'])
@@ -88,7 +89,8 @@ def run_detection(image_bytes: bytes, user_id: str, api_key: str) -> Scan:
     )
     db.session.add(scan)
     db.session.commit()
-
+    
+    generate_recommendation_task.delay(scan.id, user_id)
     scan._predictions = predictions
     img_w = image_meta.get('width', 1)
     img_h = image_meta.get('height', 1)

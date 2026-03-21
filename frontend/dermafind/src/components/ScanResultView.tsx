@@ -162,11 +162,8 @@ export function ScanResultView({ result, imageUrl, severityLabel, onNewScan }: S
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-        <button className="btn-secondary" onClick={onNewScan} style={{ flex: 1 }}>
+        <button className="btn-primary" onClick={onNewScan} style={{ flex: 1 }}>
           New Scan
-        </button>
-        <button className="btn-primary" style={{ flex: 1 }}>
-          Get Recommendation
         </button>
       </div>
     </div>

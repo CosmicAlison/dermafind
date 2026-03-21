@@ -1,4 +1,4 @@
-import type { AppPage, ScanRecord } from '../types'
+import type { AppPage, Recommendation, ScanResult } from '../types'
 import { useEffect, useState } from 'react'
 import {
   Chart as ChartJS,
@@ -39,13 +39,13 @@ const options = {
   }
 }
 
-const MOCK_SCANS: ScanRecord[] = [
+/*const MOCK_SCANS: ScanRecord[] = [
   { id: 1, score: 3, date: 'Mar 14, 2026', lesions: { blackheads: 2, darkspots: 4, papules: 1, pustules: 0, whiteheads: 2, nodules: 1 } },
   { id: 2, score: 1, date: 'Mar 10, 2026', lesions: { blackheads: 5, darkspots: 2, papules: 1, pustules: 2, whiteheads: 2, nodules: 1 } },
   { id: 3, score: 1, date: 'Feb 28, 2026', lesions: { blackheads: 2, darkspots: 4, papules: 1, pustules: 0, whiteheads: 2, nodules: 1 } },
   { id: 4, score: 2, date: 'Feb 20, 2026', lesions: { blackheads: 4, darkspots: 0, papules: 1, pustules: 0, whiteheads: 2, nodules: 1 } },
   { id: 5, score: 0, date: 'Feb 12, 2026', lesions: { blackheads: 2, darkspots: 1, papules: 0, pustules: 0, whiteheads: 0, nodules: 0 } }
-]
+]*/
 
 interface DashboardPageProps {
   setPage: (p: AppPage) => void
@@ -54,14 +54,20 @@ interface DashboardPageProps {
 export function DashboardPage({ setPage }: DashboardPageProps) {
   const { user } = useAuth();
   const firstName = user?.username?.split(' ')[0] ?? 'there';
-  const [scans, setScans] = useState<ScanRecord[] | null>()
-  const [recommendation, setRecommendation] = useState<string>();
+  const [scans, setScans] = useState<ScanResult[] | null>()
+  const [recommendation, setRecommendation] = useState<string | null>();
   const request = useApi();
 
   useEffect(()=>{
-    setRecommendation("Your skin shows a few mild blemishes, one small nodule, and some dark spots. Use a gentle cleanser, apply a retinoid at night, benzoyl peroxide in the morning, and keep your skin moisturized. Protect with sunscreen daily, treat any inflamed spots directly, and avoid picking. Niacinamide or azelaic acid can help fade dark spots over time.");
-    request<ScanRecord[]>('/inference/scan')
-    .then((scans)=>{setScans(scans)});
+    
+    request<ScanResult[]>('/inference/scan')
+    .then((scans)=>{setScans(scans)})
+    .catch(() => {setScans(null)});
+    
+    const defaultRecommendation = 'Start a skin scan to unlock actionable recommendations.';
+    request<Recommendation>('/inference/recommendation')
+    .then((recomm)=>{let text = recomm?.content ?? defaultRecommendation; setRecommendation(text)})
+    .catch(()=>{setRecommendation(defaultRecommendation)});
   }, []); 
 
   const chartData = {
@@ -69,37 +75,37 @@ export function DashboardPage({ setPage }: DashboardPageProps) {
     datasets: [
       {
         label: 'Blackheads',
-        data: scans?.map(scan => scan.lesions.blackheads || 0),
+        data: scans?.map(scan => scan.blackhead || 0),
         borderColor: '#6366f1',
         backgroundColor: '#6366f1'
       },
       {
         label: 'Whiteheads',
-        data: scans?.map(scan => scan.lesions.whiteheads || 0),
+        data: scans?.map(scan => scan.whitehead || 0),
         borderColor: '#22c55e',
         backgroundColor: '#22c55e'
       },
       {
         label: 'Pustules',
-        data: scans?.map(scan => scan.lesions.pustules || 0),
+        data: scans?.map(scan => scan.pustule || 0),
         borderColor: '#ef4444',
         backgroundColor: '#ef4444'
       },
       {
         label: 'Papules',
-        data: scans?.map(scan => scan.lesions.papules || 0),
+        data: scans?.map(scan => scan.papule || 0),
         borderColor: '#f59e0b',
         backgroundColor: '#f59e0b'
       },
       {
         label: 'Nodules',
-        data: scans?.map(scan => scan.lesions.nodules || 0),
+        data: scans?.map(scan => scan.nodule || 0),
         borderColor: '#a855f7',
         backgroundColor: '#a855f7'
       },
       {
         label: 'Darkspots',
-        data: scans?.map(scan => scan.lesions.darkspots || 0),
+        data: scans?.map(scan => scan.darkspot || 0),
         borderColor: '#14b8a6',
         backgroundColor: '#14b8a6'
       }
@@ -201,7 +207,7 @@ export function DashboardPage({ setPage }: DashboardPageProps) {
               lineHeight: 1
             }}
           >
-            {scans? scans[0].score : 0}
+            {scans? scans[0]?.result : 0}
           </div>
           <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4 }}>
             Latest Score
@@ -285,12 +291,12 @@ export function DashboardPage({ setPage }: DashboardPageProps) {
             <div>
               <div style={{ fontWeight: 500 }}>{scan.date}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-                Score: {scan.score}
+                Score: {scan.result}
               </div>
             </div>
 
             <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-              {Object.values(scan.lesions).reduce((a, b) => a + (b || 0), 0)} lesions
+              {scan['blackhead']+scan['darkspot']+scan['nodule']+scan['papule']+scan['pustule']+scan['whitehead']} lesions
             </div>
           </div>
         ))}

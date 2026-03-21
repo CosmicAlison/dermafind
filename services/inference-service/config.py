@@ -7,7 +7,7 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     ROBOFLOW_API_KEY = os.environ.get('ROBOFLOW_API_KEY', '')
-    ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+    OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload
 
 class DevelopmentConfig(Config):
