@@ -1,9 +1,9 @@
 import os
-import anthropic
 from datetime import datetime, timezone, timedelta
 
 from ..models import Recommendation, Scan
 from ..extensions import db
+import requests
 
 
 def load_prompt() -> str:
@@ -49,14 +49,20 @@ def generate_recommendation(scan: Scan, user_id: str, api_key: str) -> Recommend
     prompt_template = load_prompt()
     scan_summary    = build_scan_summary(scan)
     full_prompt     = prompt_template.replace('{{SCAN_RESULTS}}', scan_summary)
-
-    client   = anthropic.Anthropic(api_key=api_key)
-    message  = client.messages.create(
-        model      = 'claude-opus-4-6',
-        max_tokens = 1024,
-        messages   = [{'role': 'user', 'content': full_prompt}],
-    )
-    content = message.content[0].text
+    res = requests.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            },
+            json={
+                'model': 'meta-llama/llama-3.1-8b-instruct:free',
+                'messages': [{'role': 'user', 'content': full_prompt}],
+            },
+            timeout=30,
+        )
+    res.raise_for_status()
+    content =  res.json()['choices'][0]['message']['content']
 
     rec = Recommendation(
         user_id = user_id,
