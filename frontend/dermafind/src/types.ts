@@ -9,7 +9,7 @@ export interface Recommendation{
     id :  Number       
     user_id: Number   
     content : string   
-    created_at : Date
+    created_at : string
 }
 
 export interface AuthResponse {

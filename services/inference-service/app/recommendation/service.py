@@ -5,6 +5,8 @@ from ..models import Recommendation, Scan
 from ..extensions import db
 import requests
 from flask import current_app
+import re
+import json
 
 
 def load_prompt() -> str:
@@ -66,11 +68,15 @@ def generate_recommendation(scan: Scan, user_id: str) -> Recommendation:
         )
     print(res.text)
     res.raise_for_status()
-    content =  res.json()['choices'][0]['message']['content']['recommendation']
+    content =  res.json()['choices'][0]['message']['content']
+    clean = re.sub(r"```json|```", "", content).strip()
 
+    data = json.loads(clean)
+
+    recommendation = data["recommendation"]
     rec = Recommendation(
         user_id = user_id,
-        content = content,
+        content = recommendation,
     )
     db.session.add(rec)
     db.session.commit()

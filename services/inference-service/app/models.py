@@ -23,7 +23,7 @@ class Scan(db.Model):
             'id':             self.id,
             'user_id':        self.user_id,
             'result':         self.result,
-            'date':           self.date.isoformat(),
+            'date':           self.date.isoformat(sep=' ', timespec='seconds'),
             'blackhead':     self.blackhead,
             'darkspot':      self.darkspot,
             'papule':        self.papule,
@@ -46,5 +46,5 @@ class Recommendation(db.Model):
             'id':         self.id,
             'user_id':    self.user_id,
             'content':    self.content,
-            'created_at': self.created_at.isoformat(),
+            'created_at': self.created_at.isoformat(sep=' ', timespec='seconds'),
         }

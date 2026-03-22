@@ -35,9 +35,7 @@ export function AuthPage() {
     <div style={{
       minHeight: '100vh',
       minWidth:'100vw',
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-    }}>
+    }} className='md:grid md:grid-cols-2 flex justify-center'>
       {/* ── Visual panel ── */}
       <div className="md:flex md:flex-col hidden" style={{
         background: 'var(--grad)',

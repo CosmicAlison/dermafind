@@ -32,6 +32,7 @@ You Must:
 - Keep result under 100 words.
 - Do not repeat the prompt back in your response only provide the JSON in the response
 with the recommendation. 
+- Condense everything into one paragraph 
 
 Return JSON in this format:
 

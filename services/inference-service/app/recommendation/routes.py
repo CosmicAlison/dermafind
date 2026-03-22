@@ -30,12 +30,8 @@ def create_recommendation():
     if not scan_data:
         return jsonify({'error': 'Scan data required'}), 400
 
-    api_key = current_app.config['ANTHROPIC_API_KEY']
-    if not api_key:
-        return jsonify({'error': 'Anthropic API key not configured'}), 500
-
     try:
-        rec = generate_recommendation(scan_data, user_id, api_key)
+        rec = generate_recommendation(scan_data, user_id)
         return jsonify(rec.to_dict()), 200
     except Exception as e:
         current_app.logger.error(f'Recommendation error: {e}')
