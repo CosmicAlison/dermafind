@@ -10,6 +10,7 @@ RUN npm install
 # Copy the rest of your source code
 COPY . .
 
+RUN chmod +x ./node_modules/.bin/tsc ./node_modules/.bin/vite
 # Build production-ready static files
 RUN npm run build
 
