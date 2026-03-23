@@ -42,17 +42,15 @@ services:
     depends_on:
       - postgres
 
-  forum-service:
-    build: ./services/forum-service/forum
-    ports:
-      - "8082:8082"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/forumdb
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    depends_on:
-      - postgres
+  #forum-service:
+  #  build: ./services/forum-service/forum
+  #  ports:
+  #  environment:
+  #    SPRING_DATASOURCE_USERNAME: postgres
+  #    SPRING_DATASOURCE_PASSWORD: postgres
+  #    SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  #  depends_on:
+  #    - postgres
 
   inference-service:
     build: ./services/inference-service
@@ -74,7 +72,6 @@ services:
       - "80:80"
     depends_on:
       - auth-service
-      - forum-service
       - inference-service
 
   frontend:

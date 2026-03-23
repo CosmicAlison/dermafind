@@ -19,7 +19,6 @@ export function ScanLoadingView({ onComplete }: ScanLoadingViewProps) {
       setTimeout(() => setStep(i + 1), (i + 1) * 950)
     );
     const done = setTimeout(() => {
-      // In production: replace with actual API result
       onComplete(Math.random() > 0.2);
     }, STEPS.length * 950 + 500);
     return () => { timers.forEach(clearTimeout); clearTimeout(done); };
