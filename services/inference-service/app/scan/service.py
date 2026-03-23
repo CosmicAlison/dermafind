@@ -28,16 +28,6 @@ CLASS_MAPPING = {
     '5':     'blackhead',
 }
 
-# colour per lesion type for bounding boxes
-CLASS_COLOURS = {
-    'blackheads': '#FF4444',
-    'darkspots':  '#FF8800',
-    'papules':    '#FFDD00',
-    'pustules':   '#FF44AA',
-    'whiteheads': '#AAAAFF',
-    'nodules':    '#AA00FF',
-}
-
 
 def classify_severity(lesions: int, inflammatory: int, nodes: int) -> int:
     score = 0
@@ -62,7 +52,6 @@ def call_roboflow(image_bytes: bytes, api_key: str):
 
     response = CLIENT.infer(image_b64, "acne-zqozl/3")
 
-    print(response)
     return response.get('predictions', []), response.get('image', {})
 
     

@@ -66,7 +66,6 @@ def generate_recommendation(scan: Scan, user_id: str) -> Recommendation:
             },
             timeout=30,
         )
-    print(res.text)
     res.raise_for_status()
     content =  res.json()['choices'][0]['message']['content']
     clean = re.sub(r"```json|```", "", content).strip()
