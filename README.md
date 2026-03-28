@@ -27,7 +27,7 @@ The platform follows a **microservices architecture**, where services are indepe
 | Service | Tech Stack | Purpose |
 |--------|--------|--------|
 | **Auth Service** | Spring Boot, Spring Security, Spring Data JPA, Hibernate, PostgreSQL | Handles JWT authentication, access tokens, refresh tokens, and token revocation |
-| **Inference Service** | Python, FastAPI, YOLOv26 custom model, Celery, Redis | Processes uploaded images, performs acne detection, and returns structured predictions |
+| **Inference Service** | Python, Flask, YOLOv26 custom model, Celery, Redis | Processes uploaded images, performs acne detection, and returns structured predictions |
 | **Gateway** | OpenResty (Nginx + Lua) | Reverse proxy responsible for routing, authentication validation, and CORS handling |
 | **Frontend** | React, Vite, TypeScript | User interface for scans, results, authentication |
 | **Async Tasks** | Celery + Redis | Background job processing for inference workloads |
