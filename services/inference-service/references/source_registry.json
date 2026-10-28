@@ -1,0 +1,34 @@
+{
+  "sources": [
+    {
+      "id": "euroguiderm-acne-2025",
+      "title": "EuroGuiDerm Guideline for the Treatment of Acne — Update 2025 (long version)",
+      "url": "https://www.guidelines.edf.one/uploads/attachments/cmkmicwv8yrsarwjrzxnr41db-euroguiderm-acne-guideline-long-version.pdf",
+      "type": "clinical_guideline",
+      "year": 2025,
+      "priority": "primary",
+      "license": "CC BY-NC 4.0 (verify commercial permissions before storing or distributing adapted excerpts)",
+      "status": "registered_pending_license_and_clinical_review",
+      "topics": [
+        "acne grading",
+        "comedonal acne",
+        "papulopustular acne",
+        "nodular/conglobate acne",
+        "topical treatments",
+        "systemic antibiotics",
+        "isotretinoin",
+        "pregnancy precautions",
+        "maintenance therapy"
+      ],
+      "notes": "90-page guideline; source is not automatically ingested or published. Record page-level provenance for every reviewed excerpt."
+    },
+    {
+      "id": "youtube-qFOoyk-YqE4",
+      "url": "https://www.youtube.com/watch?v=qFOoyk-YqE4",
+      "type": "video",
+      "priority": "supplementary",
+      "status": "registered_pending_video_metadata_transcript_permission_and_review",
+      "notes": "Video content and speaker could not be verified. Do not index, cite as clinical evidence, or generate claims from this URL until transcript and credentials are reviewed."
+    }
+  ]
+}
