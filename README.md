@@ -174,3 +174,12 @@ The script reports **Hit@4**, **Recall@4**, and **MRR@4**, including per-case re
 **Generation**: Have qualified clinical reviewers assess a separate held-out set of recommendations for factual grounding, correct attribution to sources, harmful/contraindicated advice, escalation for nodular or severe cases, uncertainty handling, and readability. Compare **RAG versus the prior non-RAG baseline** on identical cases. Record failures and clinician decisions; any critical unsafe recommendation blocks release. Add automated checks for response schema, missing sources, irrelevant retrieval, embedding failures, prompt injection in source text, and user isolation.
 
 **Known gaps**: The current recommendation table stores text but not source IDs, so provenance is not yet persisted or exposed in the UI. No end-to-end evaluation, medical review, or CI gate has run. Source licensing, evidence freshness, model/provider compatibility, database migrations, and clinical safety must be addressed before production use.
+
+### Candidate clinical sources
+
+The user-supplied sources are tracked in [the source registry](services/inference-service/references/source_registry.json):
+
+- **EuroGuiDerm Acne Guideline, 2025, long version**: primary evidence candidate. Sections cover comedonal, papulopustular, and nodular/conglobate acne; treatment selection, antibiotics, pregnancy considerations, isotretinoin, and maintenance. The PDF states **CC BY-NC 4.0**. Do not reproduce/embed substantial adapted guideline text in a commercial product without confirming permissions. Store independently reviewed, properly attributed summaries or licensed excerpts with page numbers and revision date.
+- **YouTube video `qFOoyk-YqE4`**: supplementary candidate only. Video metadata/transcript were not reliably accessible; verify author credentials, transcript, claims, and reuse rights before indexing. Never promote a video above a clinical guideline in the evidence hierarchy.
+
+**Status:** Both URLs are registered, but **neither is embedded, published, or included in retrieval yet**. A source registry is not a populated knowledge base. Clinical review and an approved corpus are prerequisites to running the retrieval evaluation.
