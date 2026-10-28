@@ -1,0 +1,11 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE TABLE IF NOT EXISTS dermatology_chunks (
+ id BIGSERIAL PRIMARY KEY,
+ source_id TEXT NOT NULL UNIQUE,
+ title TEXT NOT NULL,
+ source_url TEXT NOT NULL,
+ content TEXT NOT NULL,
+ embedding vector(1536) NOT NULL,
+ published BOOLEAN NOT NULL DEFAULT false,
+ created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
