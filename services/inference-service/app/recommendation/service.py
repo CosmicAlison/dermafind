@@ -7,6 +7,7 @@ import requests
 from flask import current_app
 import re
 import json
+from ..rag.service import retrieve, format_context
 
 
 def load_prompt() -> str:
@@ -44,6 +45,8 @@ def build_scan_summary(scan: Scan) -> str:
 
 
 def generate_recommendation(scan: Scan, user_id: str) -> Recommendation:
+    if not isinstance(scan, Scan) or str(scan.user_id) != str(user_id):
+        raise ValueError('Invalid or unauthorized scan')
     # Rate limit — return last recommendation if within one week
     last = get_last_recommendation(user_id)
     if last and is_within_one_week(last):
@@ -52,7 +55,11 @@ def generate_recommendation(scan: Scan, user_id: str) -> Recommendation:
     api_key = current_app.config['OPENROUTER_API_KEY']
     prompt_template = load_prompt()
     scan_summary    = build_scan_summary(scan)
-    full_prompt     = prompt_template.replace('{{SCAN_RESULTS}}', scan_summary)
+    sources = retrieve('Evidence-based acne care and treatment guidance. ' + scan_summary)
+    if not sources:
+        raise RuntimeError('No approved dermatology evidence available')
+    full_prompt = (prompt_template.replace('{{SCAN_RESULTS}}', scan_summary)
+                   .replace('{{RAG_CONTEXT}}', format_context(sources)))
 
     res = requests.post(
             'https://openrouter.ai/api/v1/chat/completions',
@@ -61,7 +68,7 @@ def generate_recommendation(scan: Scan, user_id: str) -> Recommendation:
                 'Content-Type': 'application/json',
             },
             json={
-                'model': 'openrouter/free',
+                'model': current_app.config.get('RAG_CHAT_MODEL', 'openai/gpt-4o-mini'),
                 'messages': [{'role': 'user', 'content': full_prompt}],
             },
             timeout=30,

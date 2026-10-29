@@ -138,3 +138,48 @@ The **OpenResty gateway** performs the following tasks:
 - Handles CORS configuration for frontend communication
 
 ---
+
+## Evidence-grounded recommendations (RAG, experimental)
+
+This feature is implemented **without LangChain or LlamaIndex**. It uses plain Python, Flask, SQLAlchemy, OpenRouter's embedding API, and PostgreSQL/pgvector. It is on the `feature/dermatology-rag-pgvector` branch and is **not yet validated for clinical use**.
+
+### How it works
+
+1. **Curate**: Select licensed, clinically reviewed dermatology guidance. Prepare JSON objects with `source_id`, `title`, `source_url`, and `content`. No patient photos or user scan histories are indexed.
+2. **Ingest**: `scripts/ingest_references.py` validates each excerpt, requests a 1536-dimensional embedding from OpenRouter, and upserts it into `dermatology_chunks` with `published=false`.
+3. **Approve**: A human reviewer checks source reliability, relevance, licensing, and currency, then explicitly sets `published=true` for approved entries.
+4. **Scan**: The existing Roboflow detection pipeline persists lesion counts and a severity estimate. Celery invokes recommendation generation with a stored scan.
+5. **Query**: `build_scan_summary` constructs a textual summary; the same embedding model encodes that summary.
+6. **Retrieve**: `app/rag/service.py` uses pgvector's cosine-distance operator `<=>`, considers only published entries, selects up to four nearest chunks, and applies a maximum-distance threshold.
+7. **Augment**: The prompt combines scan data with numbered retrieved excerpts and source URLs. Retrieved text is explicitly treated as untrusted reference content, not instructions.
+8. **Generate**: OpenRouter returns the recommendation in the existing JSON response format. Retrieval fails closed if no approved evidence matches.
+
+### Run locally
+
+See [RAG-SETUP.md](RAG-SETUP.md) for the database schema, ingestion commands, environment configuration, and publication workflow. The configured embedding model must return exactly 1536 dimensions. Verify provider/model availability and pricing before running. Existing Postgres volumes require migration planning and backup.
+
+### Evaluation plan (required before merge)
+
+**Retrieval**: Build a gold dataset of at least 20 varied, clinician-reviewed query scenarios (comedonal, inflammatory, nodular, different severity levels, no lesions, ambiguous and out-of-distribution inputs). Each scenario must include an `id`, `query`, and at least one `relevant_source_ids` entry matching approved database records. Use no real patient data.
+
+Run from `services/inference-service` with a populated database and embedding credentials:
+
+```bash
+python scripts/evaluate_rag.py evaluation/gold.json
+python -m unittest discover -s tests -p 'test_evaluate_rag.py'
+```
+
+The script reports **Hit@4**, **Recall@4**, and **MRR@4**, including per-case retrievals. It exits nonzero for fewer than 20 cases, Hit@4 below 0.85, or Recall@4 below 0.75. These are **provisional engineering gates**, not clinical validation thresholds. No actual evaluation scores have been produced yet: an approved corpus and gold set are still required.
+
+**Generation**: Have qualified clinical reviewers assess a separate held-out set of recommendations for factual grounding, correct attribution to sources, harmful/contraindicated advice, escalation for nodular or severe cases, uncertainty handling, and readability. Compare **RAG versus the prior non-RAG baseline** on identical cases. Record failures and clinician decisions; any critical unsafe recommendation blocks release. Add automated checks for response schema, missing sources, irrelevant retrieval, embedding failures, prompt injection in source text, and user isolation.
+
+**Known gaps**: The current recommendation table stores text but not source IDs, so provenance is not yet persisted or exposed in the UI. No end-to-end evaluation, medical review, or CI gate has run. Source licensing, evidence freshness, model/provider compatibility, database migrations, and clinical safety must be addressed before production use.
+
+### Candidate clinical sources
+
+The user-supplied sources are tracked in [the source registry](services/inference-service/references/source_registry.json):
+
+- **EuroGuiDerm Acne Guideline, 2025, long version**: primary evidence candidate. Sections cover comedonal, papulopustular, and nodular/conglobate acne; treatment selection, antibiotics, pregnancy considerations, isotretinoin, and maintenance. The PDF states **CC BY-NC 4.0**. Do not reproduce/embed substantial adapted guideline text in a commercial product without confirming permissions. Store independently reviewed, properly attributed summaries or licensed excerpts with page numbers and revision date.
+- **YouTube video `qFOoyk-YqE4`**: supplementary candidate only. Video metadata/transcript were not reliably accessible; verify author credentials, transcript, claims, and reuse rights before indexing. Never promote a video above a clinical guideline in the evidence hierarchy.
+
+**Status:** Both URLs are registered, but **neither is embedded, published, or included in retrieval yet**. A source registry is not a populated knowledge base. Clinical review and an approved corpus are prerequisites to running the retrieval evaluation.
